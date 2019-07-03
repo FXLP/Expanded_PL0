@@ -450,6 +450,7 @@ void statement(unsigned long fsys){//语句分析
             else{
                 gen(read,lev-table[i].level,table[i].addr);//生成读取变量的read指令
             }
+            getsym();//
         }while(sym==comma);//如果变量之间仍有逗号则继续读取
         if(sym==rparen)
             getsym();

@@ -5,6 +5,7 @@ i:=1;
 k:=2;
 if i<k then sum:=5 else sum:=8;
 sum:=666;
+read(sum);
 write(sum);
 write(size);
 while k<6 do
