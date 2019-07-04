@@ -56,6 +56,11 @@ enum fct {
     lit, opr, lod, sto, cal, Int, jmp, jpc, read, write        // functions
 };
 
+typedef enum {
+    false,
+    true
+} bool;
+
 typedef struct{
     enum fct f;		// function code
     long l; 		// level
@@ -79,6 +84,7 @@ long ll;               // line length
 long kk, err;
 long cx;               // code allocation index
 long circleNO;  //count circle number
+long pos_exit;
 char line[81];
 char a[al+1];
 instruction code[cxmax+1];

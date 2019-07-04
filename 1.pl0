@@ -1,9 +1,9 @@
-const size=100;
+const size=100,sss=999;
 var k,i,sum; /*ssss*/
 begin   //ssss
 i:=1;
 k:=2;
-if i<k then sum:=5 else sum:=8;
+if i>k then sum:=5 else sum:=8;
 sum:=666;
 read(sum);
 write(sum);
@@ -18,4 +18,5 @@ while k<6 do
 	    i:=i+1;
 	    end;
     end;
+    write(sss);
 end.

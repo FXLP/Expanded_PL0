@@ -343,7 +343,7 @@ void condition(unsigned long fsys){//条件语法分析
 }
 
 void statement(unsigned long fsys){//语句分析
-    long i,cx1,cx2,cx3,pos_exit=0;
+    long i,cx1,cx2,cx3;
 
     if(sym==ident){//标识符
 	i=position(id);
@@ -389,7 +389,7 @@ void statement(unsigned long fsys){//语句分析
 	gen(jpc,0,0);//生成条件跳转指令
 	statement(fsys);//处理then后的语句
 	cx2=cx;
-	//gendo(jmp, 0, 0); //将来会直接跳转到else语句后面
+	gen(jmp, 0, 0); //将来会直接跳转到else语句后面
 	code[cx1].a=cx;
 	if(sym == elsesym)
 	{
