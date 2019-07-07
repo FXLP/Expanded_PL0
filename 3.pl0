@@ -1,0 +1,9 @@
+const size=100,sss=999;
+var a,b,c:boolean;
+begin
+    a:=true;
+    b:=false;
+    c:=true;
+    write(a,b,c);
+    //write(size);			
+end.

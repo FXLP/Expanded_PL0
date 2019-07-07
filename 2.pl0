@@ -1,0 +1,9 @@
+//var a,b,c:boolean;
+const size=100,sss=999;
+var k,i,sum:integer; 
+begin
+    read(sum);
+    write(sum);
+    sum:=444;
+    write(sum);			
+end.

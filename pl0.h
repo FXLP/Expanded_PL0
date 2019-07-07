@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define norw       15             // total number of reserved words
+#define norw       21             // total number of reserved words
 #define txmax      100            // length of identifier table
 #define nmax       14             // max. no. of digits in numbers
 #define al         10             // length of identifiers
@@ -48,18 +48,28 @@
 #define writesym   0x40000002
 #define exitsym    0x40000008
 
+#define truesym    0x40000010
+#define falsesym   0x40000020
+#define booleansym 0x40000040
+
+#define typesym    0x40000100
+#define realsym    0x40000200
+#define intersym   0x40000400
+
+#define typeerror  0x40001000
+
 enum object {
-    constant, variable, proc
+    constant, variable, proc,type
 };
 
 enum fct {
     lit, opr, lod, sto, cal, Int, jmp, jpc, read, write        // functions
 };
 
-typedef enum {
-    false,
-    true
-} bool;
+//typedef enum {
+//    false,
+//    true
+//} boolean;
 
 typedef struct{
     enum fct f;		// function code
@@ -77,6 +87,8 @@ typedef struct{
 
 char ch;               // last character read
 unsigned long sym;     // last symbol read
+unsigned long lastsym;  //最后得到的词法类型
+
 char id[al+1];         // last identifier read
 long num;              // last number read
 long cc;               // character count
@@ -101,6 +113,7 @@ struct{
     long val;
     long level;
     long addr;
+    __int64 type1;//ÀàÐÍÏî
 }table[txmax+1];
 
 char infilename[80];
