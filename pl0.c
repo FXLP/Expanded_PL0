@@ -36,7 +36,7 @@ void getch() {//滤掉空格，读取一个字符
 
 void getsym(){//词法分析出一个词法单元
     long i,j,k;
-    double t=1.0,num=0,z=0;//小数部分的位数和值
+    double t=1.0,numt=0,z=0;//小数部分的位数和值
     int flag=0;
 
     while(ch==' '||ch=='\t'){
@@ -90,6 +90,8 @@ void getsym(){//词法分析出一个词法单元
                 getch();
             }
             sym=realsym;
+        }else{
+            error(57);
         }
 	}else{//is integer
 	    sym=intersym;
@@ -368,6 +370,8 @@ void term(unsigned long fsys){//乘除语法分析
 
 void expression(unsigned long fsys){//表达式语法分析
     unsigned long addop;
+    unsigned long lasttype;
+    long cx1,cx2;
 
     if(sym==plus||sym==minus){
 	addop=sym; getsym();
@@ -382,9 +386,46 @@ void expression(unsigned long fsys){//表达式语法分析
 	addop=sym; getsym();
 	term(fsys|plus|minus);
 	if(addop==plus){
+        if(lasttype==intersym&&lastsym==intersym){
+			lastsym=intersym;
+		}else if(lasttype==intersym&&lastsym==realsym){
+			lastsym=realsym;
+		}else if(lasttype==realsym&&lastsym==realsym){
+			lastsym=realsym;
+		}else if(lasttype==realsym&&lastsym==intersym){
+			lastsym=realsym;
+		}else{
+			lastsym=typeerror;
+			error(50);
+		}
 	    gen(opr,0,2);
-	}else{
+	}else if(addop==minus){
+	    if(lasttype==intersym&&lastsym==intersym){
+			lastsym=intersym;
+		}else if(lasttype==intersym&&lastsym==realsym){
+			lastsym=realsym;
+		}else if(lasttype==realsym&&lastsym==realsym){
+			lastsym=realsym;
+		}else if(lasttype==realsym&&lastsym==intersym){
+			lastsym=realsym;
+		}else{
+			lastsym=typeerror;
+			error(50);
+		}
 	    gen(opr,0,3);
+	}else{
+	    if(lasttype==booleansym&&lastsym==booleansym)
+            lastsym=booleansym;
+        else{
+            lastsym=typeerror;
+            error(50);
+        }
+        gen(opr,0,17);//s[t]||s[t+1]
+        cx2=cx;
+        gen(jmp,0,0);
+        code[cx1].a=cx;
+        gen(lit,0,1);
+        code[cx2].a=cx;
 	}
     }
 }
@@ -395,18 +436,18 @@ void condition(unsigned long fsys){//条件语法分析
     if(sym==oddsym){
 	    getsym();
 	    expression(fsys);
-	    gen(opr,0,6);
 	    if(lastsym==intersym) lastsym=booleansym;//== or =?
 	    else{
             lastsym=typeerror;
             error(50);
 	    }
+	    gen(opr,0,6);
     }else{
         expression(fsys|eql|neq|lss|gtr|leq|geq);
     }
 	if((sym&(eql|neq|lss|gtr|leq|geq))){
-	    error(20);
-	}else{
+//	    error(20);
+//	}else{
 	    relop=sym;
 	    getsym();//GET SYM
 	    lasttype=lastsym;
@@ -452,7 +493,7 @@ void condition(unsigned long fsys){//条件语法分析
 
 void statement(unsigned long fsys){//语句分析
     long i,cx1,cx2,cx3;
-    //unsigned long lasttype;
+    unsigned long lasttype;
 
     if(sym==ident){//标识符
 	i=position(id);
@@ -461,17 +502,38 @@ void statement(unsigned long fsys){//语句分析
 	}else if(table[i].kind!=variable){	// assignment to non-variable
 	    error(12); i=0;
 	}
-	//lasttype=table[i].type1;
+	lasttype=table[i].type1;
 	getsym();
 	if(sym==becomes){//判断是否为赋值号
 	    getsym();
 	}else{
 	    error(13);
 	}
-	expression(fsys);//判断表达式
+	condition(fsys);//判断表达式condition(fsys)
 	//此处可有报错提示
+	if(lasttype==intersym&&lastsym==intersym){
+			lastsym=voiderror;
+		}
+	else if(lasttype==intersym&&lastsym==realsym){
+			lastsym=voiderror;
+		}
+	else if(lasttype==realsym&&lastsym==realsym){
+			lastsym=voiderror;
+		}
+	else if(lasttype==realsym&&lastsym==intersym){
+			lastsym=voiderror;
+		}
+	else if(lastsym==booleansym&&lasttype==lastsym){
+			lastsym=voiderror;
+		}
+	else
+	{
+		lastsym=typeerror;
+		error(51);
+	}
 	if(i!=0){
-	    gen(sto,lev-table[i].level,table[i].addr);
+            if(table[i].kind==variable)
+                gen(sto,lev-table[i].level,table[i].addr);
 	}
     }else if(sym==callsym){//call proc
 	getsym();
@@ -482,6 +544,7 @@ void statement(unsigned long fsys){//语句分析
 	    if(i==0){
             error(11);
 	    }else if(table[i].kind==proc){//判断是否为程序名
+	        //getsym();
             gen(cal,lev-table[i].level,table[i].addr);//无参的proc
 	    }else{
             error(15);
@@ -491,6 +554,10 @@ void statement(unsigned long fsys){//语句分析
     }else if(sym==ifsym){     //if()then{} else{}
 	getsym();
 	condition(fsys|thensym|dosym);//判断是否符合条件语法
+	if(lastsym!=booleansym){
+        lastsym=typeerror;
+        error(52);
+	}
 
 	if(sym==thensym){
 	    getsym();
@@ -499,20 +566,27 @@ void statement(unsigned long fsys){//语句分析
 	}
 	cx1=cx;//保存当前指令地址
 	gen(jpc,0,0);//生成条件跳转指令
-	statement(fsys);//处理then后的语句
-	cx2=cx;
-	gen(jmp, 0, 0); //将来会直接跳转到else语句后面
-	code[cx1].a=cx;
-	if(sym == elsesym)
-	{
+	statement(fsys|semicolon|endsym|elsesym);//处理then后的语句
+
+	if(sym==semicolon){
+        getsym();
+	}
+	if(sym == elsesym){
 		getsym();
-		statement(fsys);
+		cx2=cx;
+		gen(jmp,0,0); //将来会直接跳转到else语句后面
+		code[cx1].a=cx;
+		statement(fsys|semicolon|endsym);
 		code[cx2].a=cx;//当前是else后面的语句结束位置
 	}
+	else{
+        code[cx1].a=cx;
+        statement(fsys|semicolon|endsym);
+	}
     }
-	else if(sym==beginsym){// begin-end
-	getsym();
-	statement(fsys|semicolon|endsym);
+    else if(sym==beginsym){// begin-end
+    getsym();
+    statement(fsys|semicolon|endsym);
 	while(sym==semicolon||(sym&statbegsys)){
 	    if(sym==semicolon){
 		getsym();
@@ -526,17 +600,26 @@ void statement(unsigned long fsys){//语句分析
 	}else{
 	    error(17);
 	}
-    }else if(sym==whilesym){
+    }
+
+    else if(sym==whilesym){//while-do
     circleNO++;
-	cx1=cx; getsym();
+	cx1=cx;
+	getsym();
 	condition(fsys|dosym);
-	cx2=cx;	gen(jpc,0,0);
+	if(lastsym!=booleansym){
+		lastsym=typeerror;
+		error(52);
+	}
+	cx2=cx;
+	gen(jpc,0,0);
 	if(sym==dosym){
 	    getsym();
 	}else{
 	    error(18);
 	}
-	statement(fsys); gen(jmp,0,cx1);
+	statement(fsys);
+	gen(jmp,0,cx1);
 	code[cx2].a=cx;
 	if(pos_exit!=0){
         code[pos_exit].a=cx;
@@ -544,7 +627,8 @@ void statement(unsigned long fsys){//语句分析
 	}
 	circleNO--;
     }
-    else if(sym==exitsym){
+
+    else if(sym==exitsym){//exit
         if(circleNO==0)
             error(26);
         else{
@@ -552,7 +636,9 @@ void statement(unsigned long fsys){//语句分析
             gen(jmp,0,0);
         }
         getsym();
-    }else if(sym==readsym){//输入
+    }
+
+    else if(sym==readsym){//输入
         getsym();
         if(sym!=lparen)
             error(26);
@@ -636,9 +722,6 @@ void block(unsigned long fsys){//分析程序处理过程（开始符）
 	    getsym();
 	    do{
 		vardeclaration();
-//		while(sym==comma){
-//		    getsym(); vardeclaration();
-//		}
 		if(sym==semicolon) {
 		    getsym();
 		}else{
@@ -674,7 +757,12 @@ void block(unsigned long fsys){//分析程序处理过程（开始符）
     table[tx0].addr=cx;		// start addr of code
     cx0=cx;
     gen(Int,0,dx);
-    statement(fsys|semicolon|endsym);
+    if(sym==beginsym){
+        statement(fsys|semicolon|endsym);
+    }else{
+        error(54);
+        getsym();
+    }
     gen(opr,0,0); // return
     test(fsys,0,8);
     listcode(cx0);//
@@ -760,6 +848,10 @@ void interpret(){//解释执行
             case 16://print real 实数
                 printf("%5.2f  ",s[t]);
                 t--;
+            case 17:
+                s[t]=(long)s[t]||(long)s[t+1];
+                t=t-1;
+				break;
 		}
 		break;
 	    case lod:
@@ -782,7 +874,7 @@ void interpret(){//解释执行
 		if(s[t]==0){
 		    p=i.a;
 		}
-		t=t-1;
+		//t=t-1;
 		break;
         case read:      //读取变量
             scanf("%f",&input);
@@ -916,7 +1008,7 @@ main(){
     if(sym!=period){
 	error(9);
     }
-    if(err==0){
+    if(err==0){//
 	interpret();
     }else{
 	printf("errors in PL/0 program\n");

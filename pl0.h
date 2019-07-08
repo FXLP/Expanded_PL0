@@ -57,7 +57,7 @@
 #define intersym   0x40000400
 
 #define typeerror  0x40001000
-
+#define voiderror  0x40002000
 enum object {
     constant, variable, proc,type
 };

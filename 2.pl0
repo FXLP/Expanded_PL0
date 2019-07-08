@@ -4,6 +4,6 @@ var k,i,sum:integer;
 begin
     read(sum);
     write(sum);
-    sum:=444;
-    write(sum);			
+    //sum:=444;
+    write(size);			
 end.

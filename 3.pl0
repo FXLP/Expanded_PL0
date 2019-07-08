@@ -5,5 +5,5 @@ begin
     b:=false;
     c:=true;
     write(a,b,c);
-    //write(size);			
+    write(size);			
 end.

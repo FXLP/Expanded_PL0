@@ -1,22 +1,16 @@
 const size=100,sss=999;
-var k,i,sum; /*ssss*/
+var k,i,sum:integer; /*ssss*/
 begin   //ssss
 i:=1;
 k:=2;
-if i>k then sum:=5 else sum:=8;
+write(i);
+write(k);
+if i>k then sum:=555 ;else sum:=888;
+write(sum);
 sum:=666;
 read(sum);
 write(sum);
 write(size);
-while k<6 do
-    begin
-    k:=k+1;
-        while i<10 do
-	    begin
-            sum:=sum+i+k;
-	    exit;
-	    i:=i+1;
-	    end;
-    end;
-    write(sss);
+//while test
+write(sss);
 end.
